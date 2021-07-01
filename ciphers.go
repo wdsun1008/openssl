@@ -132,6 +132,29 @@ func (ctx *cipherCtx) applyKeyAndIV(key, iv []byte) error {
 	return nil
 }
 
+func (ctx *cipherCtx) UpdateIV(iv []byte) error {
+	var iptr *C.uchar
+	if iv != nil {
+		if len(iv) != ctx.IVSize() {
+			return fmt.Errorf("bad IV size (%d bytes instead of %d)",
+				len(iv), ctx.IVSize())
+		}
+		iptr = (*C.uchar)(&iv[0])
+	}
+	if iptr != nil {
+		var res C.int
+		if C.X_EVP_CIPHER_CTX_encrypting(ctx.ctx) != 0 {
+			res = C.EVP_EncryptInit_ex(ctx.ctx, nil, nil, nil, iptr)
+		} else {
+			res = C.EVP_DecryptInit_ex(ctx.ctx, nil, nil, nil, iptr)
+		}
+		if 1 != res {
+			return errors.New("failed to apply IV")
+		}
+	}
+	return nil
+}
+
 func (ctx *cipherCtx) Cipher() *Cipher {
 	return &Cipher{ptr: C.X_EVP_CIPHER_CTX_cipher(ctx.ctx)}
 }
