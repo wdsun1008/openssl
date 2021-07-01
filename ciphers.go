@@ -33,6 +33,7 @@ type CipherCtx interface {
 	BlockSize() int
 	KeySize() int
 	IVSize() int
+	UpdateIV([]byte) error
 }
 
 type Cipher struct {
